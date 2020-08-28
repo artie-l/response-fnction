@@ -8,6 +8,7 @@ rcParams.update({'figure.autolayout': True})
 
 
 """Constants"""
+
 c = 299792458  # m/s, speed of light
 hbar = 5.29E-12
 
@@ -92,7 +93,6 @@ def RespFuncThz(lam):
 """Calculation of Geometric Response function"""
 
 nTHz = nTHzcalc()
-r41Thz = r41THzcalc()[:, 0]
 
 GeomRespFuncCentralFreq = RespFuncThz(lamcenter)[:, 0]
 GeomRespFuncEnvelope = np.mean(RespFuncThz((np.arange(lammin, lammax, 1E-9))), axis=1)
@@ -105,6 +105,8 @@ GeomRespFuncEnvelopeshort = np.mean(RespFuncThz((np.arange(797E-9, 803E-9, 1E-9)
 # GeomRespFuncEnvelope=GeomRespFuncEnvelopeRaw*Normvalue
 
 """Calculation of Response function"""
+
+r41Thz = r41THzcalc()[:, 0]
 
 RespFuncCentralFreq = GeomRespFuncCentralFreq * r41Thz
 RespFuncEnvelope = GeomRespFuncEnvelope * r41Thz
