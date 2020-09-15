@@ -105,7 +105,7 @@ def full_response_function(Omega):
 
 lamcenter = 805E-9 # Center wavelength, nm
 FWHM = 165*10**-15 # pulse duration, fs
-Frequency = np.linspace(0.0001E12, 5E12,1500) # THz frequency range, THz
+max_thz_freq = 5E12 # Hz. Will be calculated up to this frequency. Should be > than FFT sampling frequency
 
 crystal = 'ZnTe' # Crystal type. GaP or ZnTe
 d = 500E-6 # Crystal thickness, microns
@@ -123,20 +123,17 @@ omegacenter = c * 2 * np.pi / lamcenter
 omegamin = c * 2 * np.pi / lammax
 omegamax = c * 2 * np.pi / lammin
 
+Frequency = np.linspace(0.0001E12, max_thz_freq, 1500) # THz frequency range, THz
 Omega = 2 * np.pi * Frequency[:, np.newaxis]
 
 
-freq, resp_func = full_response_function(Omega)
+freq, resp_func = full_response_function(Omega) # Response function calculation
 plt.plot(freq*1E-12, np.abs(resp_func))
-# plt.ylim(0, 1E-11)
 plt.xlim(0, np.max(freq*1E-12))
 
 # crystal = 'GaP' # Crystal type. GaP or ZnTe
 # d = 200E-6 # Crystal thickness, microns
-
 # freq, resp_func_GaP = full_response_function(Omega)
-
-
 # plt.plot(freq*1E-12, np.abs(resp_func/resp_func_GaP))
 
 
@@ -146,20 +143,25 @@ file_path = ''
 try:
     data=np.loadtxt(file_path, delimiter='\t', dtype=np.float64)
     time=data[:,0]
-    Signal=data[:,1:-1][:,0]
+    signal=data[:,1]
     
-    fft = np.fft.fft(Signal) # FFT
-    fftfreq = np.fft.fftfreq(Signal.size, d=time[1]-time[0]) # Freq. scale calculation
+    fft = np.fft.fft(signal) # FFT
+    fftfreq = np.fft.fftfreq(signal.size, d=time[1]-time[0]) # Freq. scale calculation
     
     resp_func_interpolation = interp1d(freq, resp_func, kind='zero', fill_value="extrapolate")
     final_resp_func = resp_func_interpolation(fftfreq * 1E12) # Getting response function in tact with measured data
     
-    Cut_off_Frequency=find_nearest(fftfreq, 3.2) # filter out values above detection bandwidth
+    Cut_off_Frequency=find_nearest(fftfreq, 3.4) # filter out values above detection bandwidth
     
     final_resp_func[Cut_off_Frequency:-Cut_off_Frequency] = (np.max(np.real(final_resp_func)) * 1 + 1j * np.max(np.imag(final_resp_func)))
     
     reconstructed_signal = np.real(np.fft.ifft(fft/final_resp_func))
+    
+    plt.figure("reconstructed")
+    plt.title('Reconstructed signal')
+    plt.plot(time, signal)
+    plt.plot(time, reconstructed_signal)
+    plt.xlabel("Time delay, ps")
+    plt.ylabel("THz field, V/m")
 except:
     pass
-
-
