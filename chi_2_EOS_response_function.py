@@ -19,7 +19,7 @@ lambda0 = np.arange(650E-9,950.01E-9,0.01E-9); lamcenter = 790E-9; lammin=700.8E
 
 omega0 = c/lambda0*2*np.pi; omegacenter = c*2*np.pi/lamcenter; omegamin = c*2*np.pi/lammax; omegamax = c*2*np.pi/lammin
 
-FWHM = 10*10**-15; dw=np.sqrt(2*np.pi)/FWHM 
+FWHM = 10*10**-15; dw = 2 * np.sqrt(2 * np.log(2)) / FWHM 
 
 crystal = 'ZnTe'
 
