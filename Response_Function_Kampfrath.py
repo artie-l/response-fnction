@@ -106,6 +106,8 @@ def full_response_function(Omega):
 lamcenter = 805E-9 # Center wavelength, nm
 FWHM = 165*10**-15 # pulse duration, fs
 max_thz_freq = 5E12 # Hz. Will be calculated up to this frequency. Should be > than FFT sampling frequency
+G = 10E5 # Newfocus2307 gain
+di_factor = 8 # EOS sensetivity improvement. Should be noted in the lab notebook
 
 crystal = 'ZnTe' # Crystal type. GaP or ZnTe
 d = 500E-6 # Crystal thickness, microns
@@ -126,16 +128,30 @@ omegamax = c * 2 * np.pi / lammin
 Frequency = np.linspace(0.0001E12, max_thz_freq, 1500) # THz frequency range, THz
 Omega = 2 * np.pi * Frequency[:, np.newaxis]
 
-
 freq, resp_func = full_response_function(Omega) # Response function calculation
-plt.plot(freq*1E-12, np.abs(resp_func))
-plt.xlim(0, np.max(freq*1E-12))
+resp_func = resp_func / G / di_factor # Accounting for the PD gain and lam/4 sens. improvement
 
+fig, (ax1, ax2) = plt.subplots(1, 2, sharex=True, figsize=(12,8), dpi=236)
+ax1.plot(freq[:len(freq)//2] * 1E-12, np.abs(resp_func[:len(freq)//2]), linewidth=4)
+ax2.plot(freq[:len(freq)//2] * 1E-12, np.angle(resp_func[:len(freq)//2]), linewidth=4)
+
+
+fig.suptitle("{} $\mu m$ thick {}".format(d*1E6, crystal))
+ax1.set_xlabel('Frequency, THz', fontsize=18)
+ax2.set_xlabel('Frequency, THz', fontsize=18)
+ax1.set_ylabel("$|h_{EOS}(\Omega)|$, m/V", fontsize=18)
+ax2.set_ylabel("arg$(h_{EOS})$", fontsize=18)
+ax2.yaxis.set_label_position("right")
+
+ax1.autoscale()
+ax2.autoscale()
 # crystal = 'GaP' # Crystal type. GaP or ZnTe
 # d = 200E-6 # Crystal thickness, microns
 # freq, resp_func_GaP = full_response_function(Omega)
 # plt.plot(freq*1E-12, np.abs(resp_func/resp_func_GaP))
 
+with open('{} mum {} response function'.format(d*1E6, crystal), 'w+') as file:
+    np.savetxt(file, np.column_stack((freq, resp_func)), delimiter="\t")
 
 # Import your data here
 
@@ -165,3 +181,4 @@ try:
     plt.ylabel("THz field, V/m")
 except:
     pass
+
