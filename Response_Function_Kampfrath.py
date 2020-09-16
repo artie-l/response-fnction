@@ -49,9 +49,9 @@ def nTHzcalc():
         return np.sqrt(9.075 * (1 + (403**2 - 367.3**2) / (367.3**2 - (hbar*Omega)**2 - 1j*hbar*Omega*4.3)))
         # return np.sqrt(8.7 + (1.8*(10.98E12*2*np.pi)**2/((10.98E12*2*np.pi)**2-Omega**2-1j*(0.02E12*2*np.pi)*Omega))) 
     elif crystal == 'ZnTe':
-        # return np.sqrt(7.4+(2.7*(5.32E12*2*np.pi)**2/((5.32E12*2*np.pi)**2-Omega**2-1j*(0.09E12*2*np.pi)*Omega)))
+        return np.sqrt(7.4+(2.7*(5.32E12*2*np.pi)**2/((5.32E12*2*np.pi)**2-Omega**2-1j*(0.09E12*2*np.pi)*Omega)))
         # return np.sqrt(7.44+(2.58*(5.32E12*2*np.pi)**2/((5.32E12*2*np.pi)**2-Omega**2-1j*(0.025E12*2*np.pi)*Omega)))
-        return np.sqrt(6.7 * (1 + (206**2 - 177**2) / (177**2 - (hbar*Omega)**2 - 1j*hbar*Omega*3.01)))    
+        # return np.sqrt(6.7 * (1 + (206**2 - 177**2) / (177**2 - (hbar*Omega)**2 - 1j*hbar*Omega*3.01)))    
         
 def r41THzcalc():
     """GaP epsiloninf=9.05, hw_to=367.3 cm-1, hw_lo=403.0 cm-1, gamma = 4.3 cm-1"""
@@ -97,20 +97,20 @@ def full_response_function(Omega):
     integr_coeff_2 = 4 * 1j * t12_THz() / c ** 2
     Omega *= -1
     full_resp_func = np.conj(first_part * integr_coeff_1) + second_part * integr_coeff_2
-    two_sided_frf = np.append(full_resp_func, np.flip(full_resp_func))
+    two_sided_frf = np.append(full_resp_func, np.conj(np.flip(full_resp_func)))
     two_sided_freq = np.append(Frequency, np.flip(Frequency*-1))
     return two_sided_freq, two_sided_frf
 
 # Calculation
 
-lamcenter = 805E-9 # Center wavelength, nm
-FWHM = 165*10**-15 # pulse duration, fs
-max_thz_freq = 5E12 # Hz. Will be calculated up to this frequency. Should be > than FFT sampling frequency
+lamcenter = 805E-9 # Carrier wavelength, meters
+FWHM = 165*10**-15 # Pulse duration, seconds
+max_thz_freq = 5E12 # Hz. Will be calculated up to this frequency. Should be > FFT sampling frequency
 G = 10E5 # Newfocus2307 gain
-di_factor = 8 # EOS sensetivity improvement. Should be noted in the lab notebook
+di_factor = 8 # EOS sensetivity improvement. It is noted in the lab notebook
 
 crystal = 'ZnTe' # Crystal type. GaP or ZnTe
-d = 500E-6 # Crystal thickness, microns
+d = 500E-6 # Crystal thickness, meters
 
 dw = 2*np.sqrt(2*np.log(2))/FWHM 
 dl = np.sqrt(1/dw)
@@ -155,7 +155,7 @@ with open('{} mum {} response function'.format(d*1E6, crystal), 'w+') as file:
 
 # Import your data here
 
-file_path = ''
+file_path = '05_06_2020_ZP70_mean_9_X.txt'
 try:
     data=np.loadtxt(file_path, delimiter='\t', dtype=np.float64)
     time=data[:,0]
@@ -167,18 +167,17 @@ try:
     resp_func_interpolation = interp1d(freq, resp_func, kind='zero', fill_value="extrapolate")
     final_resp_func = resp_func_interpolation(fftfreq * 1E12) # Getting response function in tact with measured data
     
-    Cut_off_Frequency=find_nearest(fftfreq, 3.4) # filter out values above detection bandwidth
+    Cut_off_Frequency=find_nearest(fftfreq, 3) # filter out values above detection bandwidth
     
-    final_resp_func[Cut_off_Frequency:-Cut_off_Frequency] = (np.max(np.real(final_resp_func)) * 1 + 1j * np.max(np.imag(final_resp_func)))
-    
+    final_resp_func[Cut_off_Frequency:-Cut_off_Frequency] = final_resp_func[0]
     reconstructed_signal = np.real(np.fft.ifft(fft/final_resp_func))
-    
     plt.figure("reconstructed")
     plt.title('Reconstructed signal')
-    plt.plot(time, signal)
-    plt.plot(time, reconstructed_signal)
+    plt.plot(time, signal/np.max(signal))
+    plt.plot(time, reconstructed_signal/np.max(reconstructed_signal))
     plt.xlabel("Time delay, ps")
     plt.ylabel("THz field, V/m")
+    with open('{} mum {} reconstructed.txt'.format(d*1E6, crystal), 'w+') as file:
+        np.savetxt(file, np.column_stack((time, reconstructed_signal)), delimiter="\t")
 except:
-    pass
-
+    print("Something wrong... Check the filepath")
