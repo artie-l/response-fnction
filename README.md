@@ -1,4 +1,4 @@
-# response-fnction
+# response-function
 
 Here one can find all scripts used in my report about electrooptic response function. 
 
