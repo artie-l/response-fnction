@@ -150,7 +150,7 @@ ax2.autoscale()
 # freq, resp_func_GaP = full_response_function(Omega)
 # plt.plot(freq*1E-12, np.abs(resp_func/resp_func_GaP))
 
-with open('{} mum {} response function'.format(d*1E6, crystal), 'w+') as file:
+with open('{} mum {} response function.txt'.format(d*1E6, crystal), 'w+') as file:
     np.savetxt(file, np.column_stack((freq, resp_func)), delimiter="\t")
 
 # Import your data here
