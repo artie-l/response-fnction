@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Thu May 14 16:54:00 2020
 
@@ -91,18 +90,6 @@ def find_nearest(array, value):
     idx = (np.abs(array - value)).argmin()
     return idx
 
-# def full_response_function(Omega):
-#     first_part, _ = quadpy.quad(Alltogethercalc, omegamin, omegamax, epsabs=5E-2, epsrel=5E-2, limit=1000)
-#     integr_coeff_1 = 4 * 1j * t12_THz() / c ** 2 
-#     Omega *= -1
-#     second_part, _ = quadpy.quad(Alltogethercalc, omegamin, omegamax, epsabs=5E-2, epsrel=5E-2, limit=1000)
-#     integr_coeff_2 = 4 * 1j * t12_THz() / c ** 2
-#     full_resp_func = np.conj(first_part * integr_coeff_1) + second_part * integr_coeff_2
-#     two_sided_frf = np.append(full_resp_func, np.conj(np.flip(full_resp_func)))
-#     # two_sided_frf = np.append(np.conj(first_part * integr_coeff_1), np.flip(second_part * integr_coeff_2))
-#     two_sided_freq = np.append(Frequency, np.flip(Frequency*-1))
-#     return two_sided_freq, two_sided_frf
-
 def full_response_function(Omega):
     first_part, _ = quadpy.quad(Alltogethercalc, omegamin, omegamax, epsabs=5E-2, epsrel=5E-2, limit=1000)
     integr_coeff_1 = 4 * 1j * t12_THz() / c ** 2 
@@ -110,31 +97,26 @@ def full_response_function(Omega):
     second_part, _ = quadpy.quad(Alltogethercalc, omegamin, omegamax, epsabs=5E-2, epsrel=5E-2, limit=1000)
     integr_coeff_2 = 4 * 1j * t12_THz() / c ** 2
     full_resp_func = np.conj(first_part * integr_coeff_1) + second_part * integr_coeff_2
-    # two_sided_frf = np.append(full_resp_func, np.conj(np.flip(full_resp_func)))
-    # two_sided_frf = np.append(np.conj(first_part * integr_coeff_1), np.flip(second_part * integr_coeff_2))
-    # two_sided_freq = np.append(Frequency, np.flip(Frequency*-1))
     return Frequency, full_resp_func
 
-# Calculation
+# Input Parameters
+crystal = 'GaP' # Crystal type. GaP or ZnTe
+d = 200E-6 # Crystal thickness, meters
 
 lamcenter = 805E-9 # Carrier wavelength, meters
 FWHM = 165*10**-15 # Pulse duration, seconds
 max_thz_freq = 5E12 # Hz. Will be calculated up to this frequency. Should be > FFT sampling frequency
-Tx=25E-3
-G = 1 # arbitrary scaling factor
-di_factor =  1 # EOS sensetivity improvement. It is noted in the lab notebook
+Tx = 25E-3 # Tx, Volts 
+G = 225 # arbitrary scaling factor
+di_factor =  1 # EOS sensetivity improvement / Attenuation factor. It is noted in the lab notebook
 
-crystal = 'GaP' # Crystal type. GaP or ZnTe
-d = 200E-6 # Crystal thickness, meters
+# Calculation
 
 dw = 2*np.sqrt(2*np.log(2))/FWHM 
 dl = np.sqrt(1/dw)
 
 lammin = lamcenter - dl
 lammax = lamcenter + dl
-
-# lammin = 720E-9
-# lammax = 860E-9
 
 lambda0 = np.arange(lammin, lammax + 0.01E-9, 0.01E-9)
 
@@ -147,12 +129,11 @@ Frequency = np.linspace(0.0001E12, max_thz_freq, 1500) # THz frequency range, TH
 Omega = 2 * np.pi * Frequency[:, np.newaxis]
 
 freq, resp_func = full_response_function(Omega) # Response function calculation
-resp_func = resp_func * G * di_factor / Tx # Accounting for the PD gain and lam/4 sens. improvement
+resp_func = resp_func * G * di_factor # Accounting for the PD gain and lam/4 sens. improvement
 
 fig, (ax1, ax2) = plt.subplots(1, 2, sharex=True, figsize=(12,8), dpi=236)
 ax1.plot(freq[:len(freq)//2] * 1E-12, np.abs(resp_func[:len(freq)//2]), linewidth=3)
 ax2.plot(freq[:len(freq)//2] * 1E-12, np.unwrap(np.angle(resp_func[:len(freq)//2])), linewidth=3)
-
 
 fig.suptitle("{} $\mu m$ thick {}".format(d*1E6, crystal))
 ax1.set_xlabel('Frequency, THz', fontsize=18)
@@ -163,17 +144,14 @@ ax2.yaxis.set_label_position("right")
 
 ax1.autoscale()
 ax2.autoscale()
-# crystal = 'GaP' # Crystal type. GaP or ZnTe
-# d = 200E-6 # Crystal thickness, microns
-# freq, resp_func_GaP = full_response_function(Omega)
-# plt.plot(freq*1E-12, np.abs(resp_func/resp_func_GaP))
 
 with open('{} mum {} response function.txt'.format(d*1E6, crystal), 'w+') as file:
     np.savetxt(file, np.column_stack((freq, resp_func)), delimiter="\t")
 
 # Import your data here
 
-file_path = '03_06_2020_ZP70_mean_16_X.txt'
+file_path = 'D:/Data/default/DATA_solstice/2016/2020_Solstice_uptoMarch/03_06_2020_ZP70_mean_16_X.txt'
+
 try:
     data=np.loadtxt(file_path, delimiter='\t', dtype=np.float64)
     time=data[:,0]
@@ -190,7 +168,7 @@ try:
     
     final_resp_func[Cut_off_Frequency:] = final_resp_func[0]
     test = np.fft.irfft(fft/final_resp_func)
-    reconstructed_signal = np.fft.irfft(fft/final_resp_func, n=len(time), norm='ortho')/(2*np.pi)
+    reconstructed_signal = np.fft.irfft(fft/final_resp_func, n=len(time), norm='ortho')
     plt.figure("reconstructed")
     plt.title('Reconstructed signal')
     plt.plot(time, signal/np.max(signal))
@@ -202,16 +180,16 @@ try:
 except:
     print("Something wrong... Check the filepath")
     
-    
 # Gamma calc
 n = nOpticCalc(omegatowavelength(omegacenter))
-t_cryst = 2/(1+n)
+t_cryst = 2 / (1 + n)
 dT_T = np.arcsin(np.max(np.abs(signal)))
-E_thz = dT_T * lamcenter / (d * t_cryst * 1E-12 * 2 * np.pi * n**3) * 10**-5
+E_thz = dT_T * lamcenter / (d * t_cryst * 1E-12 * 2 * np.pi * n**3 * di_factor) * 10**-5
 
-print(np.max(np.abs(reconstructed_signal))*10**-5)
+print('Peak THz amplitude of the reconstructed signal: {:f} kV/cm'.format(np.max(np.abs(reconstructed_signal)) * 10**-5))
+print('Peak THz amplitude using $\Gamma$ equation: {:f} kV/cm'.format(E_thz))
 
-
+# Tanaka THz test
 
 # dT_T = np.arcsin(0.44)
 # E_thz_tanaka = dT_T * 780E-9 / (300E-6 * 0.46 * 0.88E-12 * 2 * np.pi * 3.2**3 * 0.7**6) * 10**-5
