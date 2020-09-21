@@ -96,6 +96,7 @@ def full_response_function(Omega):
     Omega *= -1
     second_part, _ = quadpy.quad(Alltogethercalc, omegamin, omegamax, epsabs=5E-2, epsrel=5E-2, limit=1000)
     integr_coeff_2 = 4 * 1j * t12_THz() / c ** 2
+    Omega *= -1
     full_resp_func = np.conj(first_part * integr_coeff_1) + second_part * integr_coeff_2
     return Frequency, full_resp_func
 
