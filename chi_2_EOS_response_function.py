@@ -1,12 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jan  6 18:42:32 2021
-
-@author: Artem
-"""
-
-# -*- coding: utf-8 -*-
-"""
 Created on Thu May 14 16:54:00 2020
 
 @author: artml
@@ -119,14 +112,16 @@ def r41THzcalc():
         # return 4.25E-12*(1-0.07*(1-((hbar*Omega)**2-1j*hbar*Omega*3.01)/(177)**2)**-1)
         return 4.25E-12*(1+-0.07*(5.3E12*2*np.pi)**2/((5.3E12*2*np.pi)**2-Omega**2-1j*(0.09E12*2*np.pi)*Omega)) 
 
-offset_factor = 1000 #Just to bring the graphs on the same scale. Set to 1 in order to remove
+
+# def Alltogethercalc(omega):
+#     nOpt=nOpticCalc(omegatowavelength(omega))
+#     return TransmissionCoeffCalc(omega)*AutocorCalc(omega)*PhaseMatchingCoeffCalc(omega)*r41THzcalc()*omega*c**2/(nOpt*omega)
+
+offset_factor = 1000
 
 def Alltogethercalc1(omega):
     return TransmissionCoeffCalc(omega)*AutocorCalc(omega)*PhaseMatchingCoeffCalc(omega)*CouplingTermCalc(omega) / offset_factor
 
-def Alltogethercalc(omega):
-    nOpt=nOpticCalc(omegatowavelength(omega))
-    return TransmissionCoeffCalc(omega)*AutocorCalc(omega)*PhaseMatchingCoeffCalc(omega)*r41THzcalc()*omega*c**2/(nOpt*omega)
 
 def t12_THz():
     return np.transpose(2/(1+np.sqrt(epsilon)))[0]
