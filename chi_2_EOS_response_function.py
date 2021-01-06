@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Wed Jan  6 18:42:32 2021
+
+@author: Artem
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Thu May 14 16:54:00 2020
 
 @author: artml
@@ -19,7 +26,7 @@ lambda0 = np.arange(650E-9,950.01E-9,0.01E-9); lamcenter = 790E-9; lammin=700.8E
 
 omega0 = c/lambda0*2*np.pi; omegacenter = c*2*np.pi/lamcenter; omegamin = c*2*np.pi/lammax; omegamax = c*2*np.pi/lammin
 
-FWHM = 10*10**-15; dw = 2 * np.sqrt(2 * np.log(2)) / FWHM 
+FWHM = 10*10**-15; dw = 2*np.sqrt(2*np.log(2))/FWHM 
 
 crystal = 'ZnTe'
 
@@ -83,7 +90,7 @@ def PhaseMatchingCoeffCalc(omega):
     return (np.exp(1j*(vph**-1-vgr**-1)*Omega*d)-1)/((vph**-1-vgr**-1)*Omega)
 
 def AutocorCalc(omega):
-    return np.exp(-(1/dw**2)*(2*omega**2-2*omega*(2*omegacenter+Omega)+omegacenter**2+(omegacenter+Omega)**2))/(np.pi*dw**2)
+    return np.exp(-(1/dw**2)*(2*omega**2-2*omega*(2*omegacenter+Omega)+omegacenter**2+(omegacenter+Omega)**2))/(np.sqrt(2*np.pi)*dw*2)
 
 def TransmissionCoeffCalc(omega):
     n=nOpticCalc(omegatowavelength(omega))
@@ -100,7 +107,7 @@ def CouplingTermCalc(omega):
     chii=epsilon/epsilon0-nOptsq
     chie=nOptsq-1
     deltai=deltae=m*w0*w0*epsilon0*epsilon0/(N*N*e*e*e*dlatticeZnTe)
-    return chie*chie*(deltae*chie+deltai*chii)*omega*omega*c/(nOpt*omega)
+    return chie*chie*(deltae*chie+deltai*chii)*omega*omega*c/(nOpt*omega)*epsilon0
 
 def r41THzcalc():
     """GaP epsiloninf=9.05, hw_to=367.3 cm-1, hw_lo=403.0 cm-1, gamma = 4.3 cm-1"""
@@ -112,8 +119,10 @@ def r41THzcalc():
         # return 4.25E-12*(1-0.07*(1-((hbar*Omega)**2-1j*hbar*Omega*3.01)/(177)**2)**-1)
         return 4.25E-12*(1+-0.07*(5.3E12*2*np.pi)**2/((5.3E12*2*np.pi)**2-Omega**2-1j*(0.09E12*2*np.pi)*Omega)) 
 
+offset_factor = 1000 #Just to bring the graphs on the same scale. Set to 1 in order to remove
+
 def Alltogethercalc1(omega):
-    return TransmissionCoeffCalc(omega)*AutocorCalc(omega)*PhaseMatchingCoeffCalc(omega)*CouplingTermCalc(omega)
+    return TransmissionCoeffCalc(omega)*AutocorCalc(omega)*PhaseMatchingCoeffCalc(omega)*CouplingTermCalc(omega) / offset_factor
 
 def Alltogethercalc(omega):
     nOpt=nOpticCalc(omegatowavelength(omega))
@@ -190,4 +199,3 @@ ax2.set_xlabel('Frequency, THz', fontsize=20.5)
 ax1.set_ylabel('|$h_{EOS}(\omega, \Omega)$|, Arb. Units', fontsize=21.5)
 ax2.set_ylabel('arg$h_{EOS}(\omega, \Omega)$, Arb. Units', fontsize=21.5 )
 ax2.yaxis.set_label_position("right")
-
